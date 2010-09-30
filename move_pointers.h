@@ -27,7 +27,7 @@ class MovePointers{
 	}
 
 	static unsigned getIndex(MOVEPTR_T ptr){
-		assert(ptr & ACTIVATION_BIT);
+		MY_ASSERT(ptr & ACTIVATION_BIT);
 		return (ptr & INDEX_MASK) >> OFFSET_FOR_INDEX;
 	}
 
@@ -36,12 +36,12 @@ class MovePointers{
 	}
 
 	static moveType getMoveType(MOVEPTR_T ptr){
-		assert(ptr & ACTIVATION_BIT);
+		MY_ASSERT(ptr & ACTIVATION_BIT);
 		return (moveType) ((ptr&ACTION_TYPE_MASK)>>OFFSET_FOR_ACTION_TYPE);
 	}
 
 	static MOVEPTR_T setIndex(MOVEPTR_T ptr, unsigned index){
-		assert(ptr & ACTIVATION_BIT);
+		MY_ASSERT(ptr & ACTIVATION_BIT);
 		return (ptr & ~INDEX_MASK) | (index << OFFSET_FOR_INDEX);
 	}
 

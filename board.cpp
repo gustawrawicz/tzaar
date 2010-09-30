@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include "board.h"
@@ -9,8 +10,8 @@ using namespace std;
 
 Board::Board()
 {
-	assert(sideSize%2 == 1);	/*musi byæ jedno pole na œrodku*/
-	assert(2*(tzaars+tzarras+totts) == sideSize*sideSize - (sideSize/2)*((sideSize+1)/2) - 1);
+	MY_ASSERT(sideSize%2 == 1);	/*musi byæ jedno pole na œrodku*/
+	MY_ASSERT(2*(tzaars+tzarras+totts) == sideSize*sideSize - (sideSize/2)*((sideSize+1)/2) - 1);
 								/*tzaary tzaarasy i tottsy musz¹ w sumie pokryæ ca³¹ planszê*/
 }
 
@@ -88,7 +89,7 @@ void Board::setBeginningGameState()
 			}
 		}
 
-			assert(notSetBlackTotts == 0 && notSetBlackTzaars == 0 && notSetBlackTzarras == 0 \
+			MY_ASSERT(notSetBlackTotts == 0 && notSetBlackTzaars == 0 && notSetBlackTzarras == 0 \
 				&& notSetWhiteTotts == 0 && notSetWhiteTzaars == 0 && notSetWhiteTzarras == 0);
 
 
@@ -106,7 +107,7 @@ void Board::setBeginningGameState()
 
 	for(int i=0; i<factualSideSize*factualSideSize; i++){
 		if(board[i] != Fields::wall){
-			assert(Fields::isProperPawn(board[i]));
+			MY_ASSERT(Fields::isProperPawn(board[i]));
 			ITERATE_DIRS(dir){
 				tryToNotifyMove(i,i+dirOffsets[dir],(direction)dir);
 			}
@@ -342,7 +343,7 @@ void Board::boardSet(int i, int j, FIELD_T value){
 }
 
 void Board::notifyMove(unsigned i1, unsigned j1, unsigned i2, unsigned j2, direction dir, moveType mt){
-	assert(allMovesCount[mt] < maxOneTypeMoves);
+	MY_ASSERT(allMovesCount[mt] < maxOneTypeMoves);
 	unsigned x=factualSideSize*(i1+guardLayers)+j1+guardLayers;
 	unsigned y=factualSideSize*(i2+guardLayers)+j2+guardLayers;
 	movePointers[x][dir] = MovePointers::getMovePtr(allMovesCount[mt],y,mt);
@@ -350,7 +351,7 @@ void Board::notifyMove(unsigned i1, unsigned j1, unsigned i2, unsigned j2, direc
 }
 
 void Board::notifyMove(unsigned src, unsigned dest, direction dir, moveType mt){
-	assert(allMovesCount[mt] < maxOneTypeMoves);
+	MY_ASSERT(allMovesCount[mt] < maxOneTypeMoves);
 	movePointers[src][dir] = MovePointers::getMovePtr(allMovesCount[mt],dest,mt);
 	allMoves[mt][allMovesCount[mt]++] = Moves::getMove(src,dest,mt,dir);
 }
@@ -368,9 +369,9 @@ void Board::deleteMove(unsigned src, direction dir){
 
 void Board::deleteMove(unsigned src, direction dir, moveType mt){
 	unsigned index = MovePointers::getIndex(movePointers[src][dir]);
-	assert(index < allMovesCount[mt]);
-	assert(Moves::getSource(allMoves[mt][index]) == src);
-	assert(movePointers[src][dir] != MovePointers::initialMovePtr);
+	MY_ASSERT(index < allMovesCount[mt]);
+	MY_ASSERT(Moves::getSource(allMoves[mt][index]) == src);
+	MY_ASSERT(movePointers[src][dir] != MovePointers::initialMovePtr);
 	allMoves[mt][index] = allMoves[mt][--allMovesCount[mt]];
 	movePointers[src][dir] = MovePointers::initialMovePtr;
 	if(index < allMovesCount[mt]){

@@ -2,9 +2,9 @@
 #define _FIELDS_H_
 
 #include <string>
-#include <cassert>
 #include <iostream>
 
+#include "my_assert.h"
 #include "logic.h"
 
 using namespace std;
@@ -38,13 +38,13 @@ public:
 	}
 
 	static bool canCapture(FIELD_T attacker, FIELD_T defender){
-		assert(isProperPawn(attacker));
+		MY_ASSERT(isProperPawn(attacker));
 		if(!isProperPawn(defender)) return false;
 		return (!(!!(attacker&WHITE) ^ !!(defender&BLACK))) && ((attacker&HEIGHT_MASK) >= (defender&HEIGHT_MASK));
 	}
 
 	static bool canReinforce(FIELD_T attacker, FIELD_T defender){
-		assert(isProperPawn(attacker));
+		MY_ASSERT(isProperPawn(attacker));
 		if(!isProperPawn(defender)) return false;
 		return ((attacker&WHITE) == (defender&WHITE));
 	}
@@ -52,13 +52,13 @@ public:
 	static string debug(FIELD_T field);
 
 	static playerType getPawnColor(FIELD_T field){
-		assert((field&WHITE) ^ (field&BLACK));
+		MY_ASSERT((field&WHITE) ^ (field&BLACK));
 		if(field&WHITE) return white_t;
 		return black_t;
 	}
 
 	static pawnType getPawnType(FIELD_T field){
-		assert((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT));
+		MY_ASSERT((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT));
 		if(field&TOTT) return tott_t;
 		if(field&TZARRAS) return tzarras_t;
 		return tzaar_t;
@@ -76,14 +76,14 @@ private:
 			case tzaar_t: return TZAAR;
 			case tzarras_t: return TZARRAS;
 			case tott_t: return TOTT;
-			default: assert(false); return 0;
+			default: MY_ASSERT(false); return 0;
 		}
 	}
 	static FIELD_T getPlayerValue(playerType plr){
 		switch(plr){
 			case white_t: return WHITE;
 			case black_t: return BLACK;
-			default: assert(false); return 0;
+			default: MY_ASSERT(false); return 0;
 		}
 	}
 

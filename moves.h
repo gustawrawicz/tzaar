@@ -38,7 +38,7 @@ public:
 				m |= WHITE_MOVE | REINFORCEMENT_MOVE;
 				break;
 			default:
-				assert(false);
+				MY_ASSERT(false);
 				break;
 		}
 		return m;
@@ -67,7 +67,7 @@ public:
 			case BLACK_MOVE | REINFORCEMENT_MOVE:
 				return blackReinforcingMove_t;
 			default:
-				assert(false);
+				MY_ASSERT(false);
 				return (moveType)0;
 
 		}

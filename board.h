@@ -1,8 +1,7 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
-#include <cassert>
-
+#include "my_assert.h"
 #include "logic.h"
 #include "fields.h"
 #include "moves.h"

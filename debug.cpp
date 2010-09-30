@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include <cassert>
 
+#include "my_assert.h"
 #include "board.h"
 #include "fields.h"
 #include "logic.h"
@@ -81,9 +81,9 @@ void Board::debug()
 }
 
 string Fields::debug(FIELD_T field){
-	assert(((field&WHITE) ^ (field&BLACK)) || field == WALL || field == EMPTY);
-	assert(((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT)) || field == WALL || field == EMPTY);
-	assert(((field&(0xff)) > 0) || field == WALL || field == EMPTY);
+	MY_ASSERT(((field&WHITE) ^ (field&BLACK)) || field == WALL || field == EMPTY);
+	MY_ASSERT(((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT)) || field == WALL || field == EMPTY);
+	MY_ASSERT(((field&(0xff)) > 0) || field == WALL || field == EMPTY);
 	switch(field){
 		case EMPTY: return string("     ");
 		case WALL: return string("#####");
@@ -98,7 +98,7 @@ string Fields::debug(FIELD_T field){
 				if(field & TOTT) return (string(" ~") + (char)((field & HEIGHT_MASK) + '0') + string("~ "));
 			}
 	}
-	assert(false);
+	MY_ASSERT(false);
 	return "~~~~~";
 }
 
