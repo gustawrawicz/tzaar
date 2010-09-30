@@ -39,8 +39,8 @@ private:
 	MOVE_T getRandomBlackCapture();
 
 	void updateMoves(MOVE_T move);
-	void checkIfBlackWon(unsigned opponentMovesLeft);
-	void checkIfWhiteWon(unsigned opponentMovesLeft);
+	bool blackWon(unsigned opponentMovesLeft);
+	bool whiteWon(unsigned opponentMovesLeft);
 
 	void makeMove(MOVE_T move);
 	void tryToNotifyMove(unsigned src, unsigned dest, direction dir);
@@ -52,7 +52,7 @@ private:
 	void deleteMove(unsigned src, direction dir, moveType mt);
 
 	bool isDataConsistent();
-	void Board::checkEverything();
+	void checkEverything();
 
 	phaseType phase;
 
@@ -62,13 +62,7 @@ private:
 	MOVE_T allMoves[MOVE_TYPES_NUMBER][maxOneTypeMoves];
 
 	unsigned short allMovesCount[MOVE_TYPES_NUMBER];
-
-	unsigned short whiteTzaars;
-	unsigned short blackTzaars;
-	unsigned short whiteTzarras;
-	unsigned short blackTzarras;
-	unsigned short whiteTotts;
-	unsigned short blackTotts;
+	unsigned short allPawnsCount[PLAYER_TYPES_NUMBER][PAWN_TYPES_NUMBER];
 
 	unsigned movesDone; /*for debug needs*/
 

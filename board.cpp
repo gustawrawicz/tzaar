@@ -92,9 +92,9 @@ void Board::setBeginningGameState()
 				&& notSetWhiteTotts == 0 && notSetWhiteTzaars == 0 && notSetWhiteTzarras == 0);
 
 
-	whiteTzaars = blackTzaars = tzaars;
-	whiteTzarras = blackTzarras = tzarras;
-	whiteTotts = blackTotts = totts;
+	allPawnsCount[white_t][tzaar_t] = allPawnsCount[black_t][tzaar_t] = tzaars;
+	allPawnsCount[white_t][tzarras_t] = allPawnsCount[black_t][tzarras_t] = tzarras;
+	allPawnsCount[white_t][tott_t] = allPawnsCount[black_t][tott_t] = totts;
 
 	allMovesCount[whiteCapturingMove_t] = allMovesCount[blackCapturingMove_t] = \
 	allMovesCount[whiteReinforcingMove_t] = allMovesCount[blackReinforcingMove_t] = 0;
@@ -115,46 +115,47 @@ void Board::setBeginningGameState()
 
 	phase = beginning_t;
 
-	movesDone = 0;
-
 }
 
 playerType Board::doRandomPlayout(){
 
-	try{
-		switch(phase){
-			case beginning_t:
-				doRandomWhiteCapture();
-				movesDone++;
-				break;
-			case blackCapture_t:
-				break;
-			case blackChoice_t:
-				doRandomBlackMove();
-				movesDone++;
-			case whiteCapture_t:
-				doRandomWhiteCapture();
-				movesDone++;
-			case whiteChoice_t:
-				doRandomWhiteMove();
-				movesDone++;
-			default:
-				assert(false);
-				break;
-		}
-
-		while(true){
-			doRandomBlackCapture();
-			movesDone++;
-			doRandomBlackMove();
-			movesDone++;
+	switch(phase){
+		case beginning_t:
+			if(blackWon(allMovesCount[whiteCapturingMove_t]))
+				return black_t;
 			doRandomWhiteCapture();
-			movesDone++;
+			break;
+		case blackCapture_t:
+			break;
+		case blackChoice_t:
+			if(whiteWon(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]))
+				return white_t;
+			doRandomBlackMove();
+		case whiteCapture_t:
+			if(blackWon(allMovesCount[whiteCapturingMove_t]))
+				return black_t;
+			doRandomWhiteCapture();
+		case whiteChoice_t:
+			if(blackWon(allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t]))
+				return black_t;
 			doRandomWhiteMove();
-			movesDone++;
-		}
-	}catch(WinningException we){
-		return we.winner;
+		default:
+			break;
+	}
+
+	while(true){
+		if(whiteWon(allMovesCount[blackCapturingMove_t]))
+			return white_t;
+		doRandomBlackCapture();
+		if(whiteWon(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]))
+			return white_t;
+		doRandomBlackMove();
+		if(blackWon(allMovesCount[whiteCapturingMove_t]))
+			return black_t;
+		doRandomWhiteCapture();
+		if(blackWon(allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t]))
+			return black_t;
+		doRandomWhiteMove();
 	}
 
 }
@@ -193,7 +194,6 @@ void Board::doRandomBlackMove(){
 
 MOVE_T Board::getRandomWhiteMove(){
 
-	checkIfBlackWon(allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t]);
 	int r=rand()%(allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t]);
 	if(r<allMovesCount[whiteCapturingMove_t])
 		return allMoves[whiteCapturingMove_t][r];
@@ -204,9 +204,7 @@ MOVE_T Board::getRandomWhiteMove(){
 
 MOVE_T Board::getRandomBlackMove(){
 	
-	int r;
-	checkIfWhiteWon(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]);
-	r=rand()%(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]);
+	int r=rand()%(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]);
 	if(r<allMovesCount[blackCapturingMove_t])
 		return allMoves[blackCapturingMove_t][r];
 	else
@@ -216,7 +214,6 @@ MOVE_T Board::getRandomBlackMove(){
 
 MOVE_T Board::getRandomWhiteCapture(){
 
-	checkIfBlackWon(allMovesCount[whiteCapturingMove_t]);
 	int r = rand()%allMovesCount[whiteCapturingMove_t];
 	return allMoves[whiteCapturingMove_t][r];
 
@@ -224,26 +221,25 @@ MOVE_T Board::getRandomWhiteCapture(){
 
 MOVE_T Board::getRandomBlackCapture(){
 
-	checkIfBlackWon(allMovesCount[blackCapturingMove_t]);
 	int r = rand()%allMovesCount[blackCapturingMove_t];
 	return allMoves[blackCapturingMove_t][r];
 
 }
 
-void Board::checkIfBlackWon(unsigned opponentMovesLeft){
-	if(opponentMovesLeft == 0 || whiteTotts == 0 || whiteTzaars == 0 || whiteTzarras == 0){
-		WinningException we;
-		we.winner = black_t;
-		throw we;
+bool Board::blackWon(unsigned opponentMovesLeft){
+	if(opponentMovesLeft == 0 || allPawnsCount[white_t][tott_t] == 0 ||
+		allPawnsCount[white_t][tzarras_t] == 0 || allPawnsCount[white_t][tzaar_t] == 0){
+		return true;
 	}
+	return false;
 }
 
-void Board::checkIfWhiteWon(unsigned opponentMovesLeft){
-	if(opponentMovesLeft == 0 || blackTotts == 0 || blackTzaars == 0 || blackTzarras == 0){
-		WinningException we;
-		we.winner = white_t;
-		throw we;
+bool Board::whiteWon(unsigned opponentMovesLeft){
+	if(opponentMovesLeft == 0 || allPawnsCount[black_t][tott_t] == 0 ||
+		allPawnsCount[black_t][tzarras_t] == 0 || allPawnsCount[black_t][tzaar_t] == 0){
+		return true;
 	}
+	return false;
 }
 
 void Board::makeMove(MOVE_T move){
@@ -253,34 +249,15 @@ void Board::makeMove(MOVE_T move){
 	pawnType pwnt = Fields::getPawnType(board[dest]);
 	playerType plrt = Fields::getPawnColor(board[dest]); 
 
-	switch(pwnt){
-		case tzaar_t:
-			if(plrt == white_t)
-				whiteTzaars--;
-			else
-				blackTzaars--;
-			break;
-		case tzarras_t:
-			if(plrt == white_t)
-				whiteTzarras--;
-			else
-				blackTzarras--;
-			break;
-		case tott_t:
-			if(plrt == white_t)
-				whiteTotts--;
-			else
-				blackTotts--;
-		default:
-			break;
-	}
+	allPawnsCount[plrt][pwnt]--;
 
-	if(mt == whiteCapturingMove_t || mt == blackCapturingMove_t)
+	if(mt == whiteCapturingMove_t || mt == blackCapturingMove_t){
 		board[dest] = board[src];
-	else
+		board[src] = Fields::empty;
+	}else{
 		board[dest] = Fields::increase(board[dest],board[src]);
-
-	board[src] = Fields::empty;
+		board[src] = Fields::empty;
+	}
 
 }
 

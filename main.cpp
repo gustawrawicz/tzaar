@@ -9,22 +9,28 @@ using namespace std;
 void main(){
 
 
-	srand(5);
+	srand(time(NULL));
 
 	Board b;
-	b.setBeginningGameState();
-	b.debug();
 
-	if(b.doRandomPlayout() == white_t)
-		cout<<"losowy playout wygral gracz bialy";
-	else
-		cout<<"losowy playout wygral gracz czarny";
+	int white = 0;
+	int black = 0;
+
+	int start = time(NULL);
+
+	for(int i=0; i<1000; i++){
+		b.setBeginningGameState();
+		if(b.doRandomPlayout() == white_t)
+			white++;
+		else
+			black++;
+	}
+
+	cout<<"bialy wygral "<<white<<" razy, a czarny "<<black<<" razy."<<endl;
+
+	cout<<"trwalo to "<<time(NULL)-start<<" sekund.";
 
 	string s;
-	cin>>s;
-
-	b.debug();
-
 	cin>>s;
 
 }
