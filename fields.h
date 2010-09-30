@@ -33,7 +33,8 @@ public:
 	static bool isProperPawn(FIELD_T field){
 		return	((field&WHITE) ^ (field&BLACK)) && 
 				((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT)) && 
-				((field&(0xff)) > 0);
+				((field&(0xff)) > 0) &&
+				(!(field&WALL));
 	}
 
 	static bool canCapture(FIELD_T attacker, FIELD_T defender){
@@ -51,18 +52,16 @@ public:
 	static string debug(FIELD_T field);
 
 	static playerType getPawnColor(FIELD_T field){
+		assert((field&WHITE) ^ (field&BLACK));
 		if(field&WHITE) return white_t;
-		if(field&BLACK) return black_t;
-		cout<<"warning: field with value "<<field<<" is neither white or black\n";
-		return dummy_player_t;
+		return black_t;
 	}
 
 	static pawnType getPawnType(FIELD_T field){
+		assert((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT));
 		if(field&TOTT) return tott_t;
 		if(field&TZARRAS) return tzarras_t;
-		if(field&TZAAR) return tzaar_t;
-		cout<<"warning: field with value "<<field<<" is neither tott or tzaar or tzarras\n";
-		return dummy_pawn_t;
+		return tzaar_t;
 	}
 
 	static FIELD_T increase(FIELD_T increased, FIELD_T increaser){

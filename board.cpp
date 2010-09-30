@@ -115,6 +115,8 @@ void Board::setBeginningGameState()
 
 	phase = beginning_t;
 
+	movesDone = 0;
+
 }
 
 playerType Board::doRandomPlayout(){
@@ -123,15 +125,19 @@ playerType Board::doRandomPlayout(){
 		switch(phase){
 			case beginning_t:
 				doRandomWhiteCapture();
+				movesDone++;
 				break;
 			case blackCapture_t:
 				break;
 			case blackChoice_t:
 				doRandomBlackMove();
+				movesDone++;
 			case whiteCapture_t:
 				doRandomWhiteCapture();
+				movesDone++;
 			case whiteChoice_t:
 				doRandomWhiteMove();
+				movesDone++;
 			default:
 				assert(false);
 				break;
@@ -139,9 +145,13 @@ playerType Board::doRandomPlayout(){
 
 		while(true){
 			doRandomBlackCapture();
+			movesDone++;
 			doRandomBlackMove();
+			movesDone++;
 			doRandomWhiteCapture();
+			movesDone++;
 			doRandomWhiteMove();
+			movesDone++;
 		}
 	}catch(WinningException we){
 		return we.winner;
@@ -154,7 +164,6 @@ void Board::doRandomWhiteCapture(){
 	MOVE_T move = getRandomWhiteCapture();
 	makeMove(move);
 	updateMoves(move);
-
 
 }
 
@@ -201,7 +210,7 @@ MOVE_T Board::getRandomBlackMove(){
 	if(r<allMovesCount[blackCapturingMove_t])
 		return allMoves[blackCapturingMove_t][r];
 	else
-		return allMoves[blackCapturingMove_t][r-allMovesCount[blackCapturingMove_t]];
+		return allMoves[blackReinforcingMove_t][r-allMovesCount[blackCapturingMove_t]];
 
 }
 
@@ -280,7 +289,6 @@ void Board::updateMoves(MOVE_T move){
 	unsigned source = Moves::getSource(move);
 	unsigned dest = Moves::getDestination(move);
 
-
 	ITERATE_LINES(dir){
 		unsigned side1 = MovePointers::getDestination(movePointers[source][dir]);
 		unsigned side2 = MovePointers::getDestination(movePointers[source][OPPOSITE_DIR(dir)]);
@@ -304,8 +312,16 @@ void Board::updateMoves(MOVE_T move){
 	}
 
 	ITERATE_DIRS(dir){
-/*tu niebawem stanie pa³ac cezara*/
+		if(movePointers[dest][dir] != MovePointers::initialMovePtr){
+			unsigned otherSide = MovePointers::getDestination(movePointers[dest][dir]);
+			deleteMove(dest,(direction)dir);
+			deleteMove(otherSide,(direction)OPPOSITE_DIR(dir));
+			tryToNotifyMove(dest,otherSide,(direction)dir);
+			tryToNotifyMove(otherSide,dest,(direction)OPPOSITE_DIR(dir));
+		}
 	}
+
+	checkEverything();
 
 }
 
@@ -314,15 +330,23 @@ void Board::tryToNotifyMove(unsigned src, unsigned dest, direction dir){
 	if(Fields::getPawnColor(board[src]) == white_t){
 		if(Fields::canCapture(board[src],board[dest])){
 			notifyMove(src,dest,dir,whiteCapturingMove_t);
+			return;
 		} else if(Fields::canReinforce(board[src],board[dest])){
 			notifyMove(src,dest,dir,whiteReinforcingMove_t);
+			return;
 		}
 	} else if(Fields::getPawnColor(board[src]) == black_t){
 		if(Fields::canCapture(board[src],board[dest])){
 			notifyMove(src,dest,dir,blackCapturingMove_t);
+			return;
 		} else if(Fields::canReinforce(board[src],board[dest])){
 			notifyMove(src,dest,dir,blackReinforcingMove_t);
+			return;
 		}
+	}
+
+	if(Fields::isProperPawn(board[src]) && Fields::isProperPawn(board[dest])){
+		notifyInactiveMove(src,dest,dir);
 	}
 
 }
@@ -350,23 +374,20 @@ void Board::notifyMove(unsigned src, unsigned dest, direction dir, moveType mt){
 	allMoves[mt][allMovesCount[mt]++] = Moves::getMove(src,dest,mt,dir);
 }
 
+void Board::notifyInactiveMove(unsigned src, unsigned dest, direction dir){
+	movePointers[src][dir] = MovePointers::getInactiveMovePtr(dest);
+}
+
 void Board::deleteMove(unsigned src, direction dir){
-	moveType mt = MovePointers::getMoveType(movePointers[src][dir]);
-	deleteMove(src,dir,mt);
+	if(MovePointers::isActive(movePointers[src][dir]))
+		deleteMove(src,dir,MovePointers::getMoveType(movePointers[src][dir]));
+	else
+		movePointers[src][dir] = MovePointers::initialMovePtr;
 }
 
 void Board::deleteMove(unsigned src, direction dir, moveType mt){
-	try{
-		isDataConsistent();
-	}catch(DataInconsistency di){
-		cout<<"394 "<<di.field<<" "<<di.dir<<endl;
-		debug();
-	}
 	unsigned index = MovePointers::getIndex(movePointers[src][dir]);
 	assert(index < allMovesCount[mt]);
-	if(int g = Moves::getSource(allMoves[mt][index]) != src){
-		cout<<"chuj";
-	}
 	assert(Moves::getSource(allMoves[mt][index]) == src);
 	assert(movePointers[src][dir] != MovePointers::initialMovePtr);
 	allMoves[mt][index] = allMoves[mt][--allMovesCount[mt]];
@@ -382,7 +403,7 @@ bool Board::isDataConsistent(){
 
 	for(int i=0; i<factualSideSize*factualSideSize; i++){
 		ITERATE_DIRS(dir){
-			if(movePointers[i][dir] != MovePointers::initialMovePtr){
+			if((movePointers[i][dir] != MovePointers::initialMovePtr) && MovePointers::isActive(movePointers[i][dir])){
 				unsigned index = MovePointers::getIndex(movePointers[i][dir]);
 				moveType mt = MovePointers::getMoveType(movePointers[i][dir]);
 				if(		(Moves::getSource(allMoves[mt][index]) != i) || 
@@ -397,6 +418,32 @@ bool Board::isDataConsistent(){
 		}
 	}
 
+	for(int mt=0; mt<4; mt++)
+		for(int i=0; i<allMovesCount[mt]; i++){
+			if(		(board[Moves::getSource(allMoves[mt][i])] == Fields::empty) ||
+					(board[Moves::getDestination(allMoves[mt][i])] == Fields::empty)){
+				BrokenMove bm;
+				bm.dest = Moves::getDestination(allMoves[mt][i]);
+				bm.src = Moves::getSource(allMoves[mt][i]);
+				throw bm;
+			}
+
+		}
+
 	return true;
+
+}
+
+void Board::checkEverything(){
+
+	try{
+		isDataConsistent();
+	}catch(DataInconsistency di){
+		cout<<"dane niespojne! Z pola "<<di.field<<" w kierunku "<<di.dir<<endl;
+		debug();
+	}catch(BrokenMove bm){
+		cout<<"zepsuty ruch! Z pola "<<bm.src<<" do pola "<<bm.dest<<endl;
+		debug();
+	}
 
 }

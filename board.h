@@ -47,10 +47,12 @@ private:
 
 	void notifyMove(unsigned i1, unsigned j1, unsigned i2, unsigned j2, direction dir, moveType mt);
 	void notifyMove(unsigned src, unsigned dest, direction dir, moveType mt);
-	void Board::deleteMove(unsigned src, direction dir);
+	void notifyInactiveMove(unsigned src, unsigned dest, direction dir);
+	void deleteMove(unsigned src, direction dir);
 	void deleteMove(unsigned src, direction dir, moveType mt);
 
 	bool isDataConsistent();
+	void Board::checkEverything();
 
 	phaseType phase;
 
@@ -67,6 +69,8 @@ private:
 	unsigned short blackTzarras;
 	unsigned short whiteTotts;
 	unsigned short blackTotts;
+
+	unsigned movesDone; /*for debug needs*/
 
 };
 

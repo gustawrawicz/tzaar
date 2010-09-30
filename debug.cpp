@@ -103,5 +103,12 @@ string Fields::debug(FIELD_T field){
 }
 
 void MovePointers::debug(MOVEPTR_T mv){
-	cout<<"i: "<<getIndex(mv)<<" dst: "<<getDestination(mv)<<" mt: "<<getMoveType(mv);
+	if(MovePointers::initialMovePtr == mv){
+		cout<<" -0- ";
+		return;
+	}
+	if(MovePointers::isActive(mv))
+		cout<<"i: "<<getIndex(mv)<<" dst: "<<getDestination(mv)<<" mt: "<<getMoveType(mv);
+	else
+		cout<<"INACTIVE dst: "<<getDestination(mv);
 }

@@ -9,7 +9,7 @@ using namespace std;
 void main(){
 
 
-	srand(1);
+	srand(5);
 
 	Board b;
 	b.setBeginningGameState();

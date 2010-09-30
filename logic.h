@@ -3,8 +3,8 @@
 
 #include "directions.h"
 
-enum pawnType {tzaar_t, tzarras_t, tott_t, dummy_pawn_t};
-enum playerType {white_t, black_t, dummy_player_t};
+enum pawnType {tzaar_t, tzarras_t, tott_t};
+enum playerType {white_t, black_t};
 enum phaseType {beginning_t, blackCapture_t, blackChoice_t, whiteCapture_t, whiteChoice_t};
 enum moveType {blackCapturingMove_t=0, blackReinforcingMove_t, whiteCapturingMove_t, whiteReinforcingMove_t};
 
@@ -18,6 +18,11 @@ public:
 struct DataInconsistency{
 	unsigned field;
 	direction dir;
+};
+
+struct BrokenMove{
+	unsigned src;
+	unsigned dest;
 };
 
 #endif
