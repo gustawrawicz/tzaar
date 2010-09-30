@@ -1,17 +1,19 @@
 #include <iostream>
 #include <string>
 #include <ctime>
+#include <cstdlib>
 
 #include "board.h"
 
 using namespace std;
 
-void main(){
+int main(){
 
 
 	srand(time(NULL));
 
 	Board b;
+	b.setBeginningGameState();
 
 	int white = 0;
 	int black = 0;
@@ -19,8 +21,9 @@ void main(){
 	int start = time(NULL);
 
 	for(int i=0; i<1000; i++){
-		b.setBeginningGameState();
-		if(b.doRandomPlayout() == white_t)
+		Board b2;
+		b2.load(b);
+		if(b2.doRandomPlayout() == white_t)
 			white++;
 		else
 			black++;

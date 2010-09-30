@@ -117,6 +117,10 @@ void Board::setBeginningGameState()
 
 }
 
+void Board::load(Board& b){
+	memcpy(this, &b, sizeof(*this));
+}
+
 playerType Board::doRandomPlayout(){
 
 	switch(phase){

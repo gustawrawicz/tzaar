@@ -18,6 +18,7 @@ public:
 	Board();
 
 	void setBeginningGameState();
+	void load(Board& b);
 	void playRandom();
 	void debug();
 
@@ -63,8 +64,6 @@ private:
 
 	unsigned short allMovesCount[MOVE_TYPES_NUMBER];
 	unsigned short allPawnsCount[PLAYER_TYPES_NUMBER][PAWN_TYPES_NUMBER];
-
-	unsigned movesDone; /*for debug needs*/
 
 };
 
