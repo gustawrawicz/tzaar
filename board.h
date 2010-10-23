@@ -9,8 +9,7 @@
 #include "sizes.h"
 #include "move_pointers.h"
 
-class Board
-{
+class Board{
 
 public:
 
@@ -27,7 +26,6 @@ private:
 
 	FIELD_T boardAt(int i, int j);
 	void boardSet(int i, int j, FIELD_T value);
-	void firstFreeMoveSet(int i, int j, short value);
 
 	void doRandomWhiteMove();
 	void doRandomWhiteCapture();

@@ -14,11 +14,6 @@ enum moveType {blackCapturingMove_t=0, blackReinforcingMove_t, whiteCapturingMov
 #define PLAYER_TYPES_NUMBER 2
 #define PAWN_TYPES_NUMBER 3
 
-class WinningException{
-public:
-	playerType winner;
-};
-
 struct DataInconsistency{
 	unsigned field;
 	direction dir;

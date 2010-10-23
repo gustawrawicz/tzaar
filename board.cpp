@@ -124,6 +124,8 @@ void Board::load(Board& b){
 
 playerType Board::doRandomPlayout(){
 
+/*for optimization omits attribute 'phase' updating*/
+
 	switch(phase){
 		case beginning_t:
 			if(blackWon(allMovesCount[whiteCapturingMove_t]))
@@ -302,8 +304,6 @@ void Board::updateMoves(MOVE_T move){
 			tryToNotifyMove(otherSide,dest,(direction)OPPOSITE_DIR(dir));
 		}
 	}
-
-	checkEverything();
 
 }
 

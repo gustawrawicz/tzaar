@@ -11,5 +11,4 @@ const unsigned totts = 15;
 
 const unsigned maxOneTypeMoves = 4*sideSize*sideSize;
 
-
 #endif

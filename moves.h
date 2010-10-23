@@ -3,6 +3,7 @@
 
 #include "logic.h"
 #include "directions.h"
+#include "my_assert.h"
 
 #define MOVE_T unsigned
 #define OFFSET_FOR_DESTINATION 16
@@ -69,10 +70,8 @@ public:
 			default:
 				MY_ASSERT(false);
 				return (moveType)0;
-
 		}
 	}
-
 
 };
 
