@@ -10,19 +10,67 @@ using namespace std;
 
 Board::Board()
 {
-	MY_ASSERT(sideSize%2 == 1);	/*musi byæ jedno pole na œrodku*/
+	MY_ASSERT(sideSize%2 == 1);	/*there has to be one field exactly in the middle of the board*/
 	MY_ASSERT(2*(tzaars+tzarras+totts) == sideSize*sideSize - (sideSize/2)*((sideSize+1)/2) - 1);
-								/*tzaary tzaarasy i tottsy musz¹ w sumie pokryæ ca³¹ planszê*/
+								/*tzaars, tzarrases and totts have to cover all board*/
+}
+
+void Board::resetMovesIterator(){
+	moveIterator.moveIndex = 0;
+	moveIterator.mt = MOVE_TYPE_FROM_PHASE(phase);
+	moveIterator.needToJumpForward = CHOICE_PHASE(phase);
+}
+
+MOVE_T Board::getIteratorValue(){
+	return allMoves[moveIterator.mt][moveIterator.moveIndex];
+}
+
+void Board::increaseIterator(){
+	moveIterator.moveIndex++;
+	if(iteratorAtEnd() && moveIterator.needToJumpForward){
+		MY_ASSERT((moveIterator.mt == blackCapturingMove_t) || (moveIterator.mt == whiteCapturingMove_t));
+		moveIterator.moveIndex = 0;
+		moveIterator.mt = NEXT_MOVE(moveIterator.mt);
+		moveIterator.needToJumpForward = false;
+	}
+}
+
+bool Board::iteratorAtEnd(){
+	return moveIterator.moveIndex >= allMovesCount[moveIterator.mt];
+}
+
+playerType Board::getMovingPlayer(){
+	if(phase == blackCapture_t || phase == blackChoice_t)
+		return black_t;
+	return white_t;
+}
+
+phaseType Board::getPhase(){
+	return phase;
+}
+
+int Board::getMovesCount(){
+	if(CHOICE_PHASE(phase)){
+		if(ACTIVE_PLAYER(phase) == white_t)
+			return allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t];
+		else
+			return allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t];
+	} else {
+		if(ACTIVE_PLAYER(phase) == white_t)
+			return allMovesCount[whiteCapturingMove_t];
+		else
+			return allMovesCount[whiteReinforcingMove_t];
+	}
 }
 
 void Board::setBeginningGameState()
 {
 
-	for(unsigned i=0; i<sideSize; i++)	/*czyszczê planszê*/
+	for(unsigned i=0; i<sideSize; i++)
 		for(unsigned j=0; j<sideSize; j++)
 			boardSet(i,j,Fields::empty);
 
-	for(int i=-(int)guardLayers; i<(int)(sideSize+guardLayers); i++)	/*ustawiam dooko³a œciany*/
+	for(int i=-(int)guardLayers; i<(int)(sideSize+guardLayers); i++)	/*guards at the ends of the board*/
 		for(int j=-(int)guardLayers; j<0; j++){
 			boardSet(i,j,Fields::wall);
 			boardSet(j,i,Fields::wall);
@@ -30,7 +78,7 @@ void Board::setBeginningGameState()
 			boardSet(sideSize+guardLayers+j,i,Fields::wall);
 		}
 
-	for(unsigned i = 0, j = sideSize-1; i < sideSize/2; j--){ /*blokujê lewy dolny róg*/
+	for(unsigned i = 0, j = sideSize-1; i < sideSize/2; j--){ /*blocking left-lower corner*/
 		if(j <= sideSize/2 + i){
 			i++;
 			j=sideSize;
@@ -39,7 +87,7 @@ void Board::setBeginningGameState()
 		boardSet(i,j,Fields::wall);
 	}
 
-	for(unsigned i = sideSize-1, j = 0; i > sideSize/2; j++){ /*prawy górny*/
+	for(unsigned i = sideSize-1, j = 0; i > sideSize/2; j++){ /*right-upper*/
 		if(j >= i - sideSize/2){
 			i--;
 			j = -1;
@@ -48,31 +96,29 @@ void Board::setBeginningGameState()
 		boardSet(i,j,Fields::wall);
 	}
 
-	boardSet(sideSize/2,sideSize/2,Fields::wall); /*blokujê œrodek*/
+	boardSet(sideSize/2,sideSize/2,Fields::wall); /*middle of the board*/
 
 	unsigned	notSetWhiteTzaars = tzaars, notSetBlackTzaars = tzaars, \
 				notSetWhiteTzarras = tzarras, notSetBlackTzarras = tzarras, \
 				notSetWhiteTotts = totts, notSetBlackTotts = totts, \
 				allNotSet = 2*(tzaars + tzarras + totts), allNotSetWhite = allNotSet/2;			
 
-	for(unsigned i=0; i<sideSize; i++)	/*zape³niam planszê pionkami*/
+	for(unsigned i=0; i<sideSize; i++)	/*setting pawns: each at random place of the board*/
 		for(unsigned j=0; j<sideSize; j++){
 			if(boardAt(i,j) == Fields::empty){
 				unsigned r = rand() % allNotSet;
 				allNotSet--;
 				if(r < allNotSetWhite){
+					allNotSetWhite--;
 					if(r < notSetWhiteTotts){
 						boardSet(i,j,Fields::getOccupiedValue(tott_t, white_t, 1));
 						notSetWhiteTotts--;
-						allNotSetWhite--;
 					} else if(r < notSetWhiteTzaars + notSetWhiteTotts) {
 						boardSet(i,j,Fields::getOccupiedValue(tzaar_t, white_t, 1));
 						notSetWhiteTzaars--;
-						allNotSetWhite--;
 					} else {
 						boardSet(i,j,Fields::getOccupiedValue(tzarras_t, white_t, 1));
 						notSetWhiteTzarras--;
-						allNotSetWhite--;
 					}
 				} else {
 					if(r < notSetBlackTotts + allNotSetWhite){
@@ -89,7 +135,7 @@ void Board::setBeginningGameState()
 			}
 		}
 
-			MY_ASSERT(notSetBlackTotts == 0 && notSetBlackTzaars == 0 && notSetBlackTzarras == 0 \
+			MY_ASSERT(notSetBlackTotts == 0 && notSetBlackTzaars == 0 && notSetBlackTzarras == 0
 				&& notSetWhiteTotts == 0 && notSetWhiteTzaars == 0 && notSetWhiteTzarras == 0);
 
 
@@ -97,8 +143,8 @@ void Board::setBeginningGameState()
 	allPawnsCount[white_t][tzarras_t] = allPawnsCount[black_t][tzarras_t] = tzarras;
 	allPawnsCount[white_t][tott_t] = allPawnsCount[black_t][tott_t] = totts;
 
-	allMovesCount[whiteCapturingMove_t] = allMovesCount[blackCapturingMove_t] = \
-	allMovesCount[whiteReinforcingMove_t] = allMovesCount[blackReinforcingMove_t] = 0;
+	allMovesCount[whiteCapturingMove_t] = allMovesCount[blackCapturingMove_t]
+		= allMovesCount[whiteReinforcingMove_t] = allMovesCount[blackReinforcingMove_t] = 0;
 
 	for(unsigned i=0; i<factualSideSize*factualSideSize; i++)
 		ITERATE_DIRS(dir){
@@ -120,6 +166,12 @@ void Board::setBeginningGameState()
 
 void Board::load(Board& b){
 	memcpy(this, &b, sizeof(*this));
+}
+
+void Board::doSingleMove(MOVE_T move){
+	makeMove(move);
+	updateMoves(move);
+	phase = NEXT_PHASE(phase);
 }
 
 playerType Board::doRandomPlayout(){
@@ -327,9 +379,8 @@ void Board::tryToNotifyMove(unsigned src, unsigned dest, direction dir){
 		}
 	}
 
-	if(Fields::isProperPawn(board[src]) && Fields::isProperPawn(board[dest])){
+	if(Fields::isProperPawn(board[src]) && Fields::isProperPawn(board[dest]))
 		notifyInactiveMove(src,dest,dir);
-	}
 
 }
 

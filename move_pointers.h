@@ -4,26 +4,30 @@
 #include "logic.h"
 
 #define DESTINATION_MASK 0xffff
+#define OFFSET_FOR_DESTINATION_MASK 0
 #define INDEX_MASK 0xfff0000
 #define OFFSET_FOR_INDEX 16
 #define ACTION_TYPE_MASK 0x30000000
-#define ACTIVATION_BIT 0x40000000
 #define OFFSET_FOR_ACTION_TYPE 28
+#define ACTIVATION_BIT 0x40000000
 
 #define MOVEPTR_T unsigned
 
 class MovePointers{
-	public:
+
+public:
 
 	static const MOVEPTR_T initialMovePtr = 0;
 
 	static MOVEPTR_T getMovePtr(unsigned indexInMovesTable, unsigned destination, moveType move){
 		return	(indexInMovesTable<<OFFSET_FOR_INDEX) | 
-				destination | (move<<OFFSET_FOR_ACTION_TYPE) | ACTIVATION_BIT;
+				(destination<<OFFSET_FOR_DESTINATION_MASK) |
+				(move<<OFFSET_FOR_ACTION_TYPE) |
+				ACTIVATION_BIT;
 	}
 
 	static MOVEPTR_T getInactiveMovePtr(unsigned destination){
-		return	destination;
+		return destination;
 	}
 
 	static unsigned getIndex(MOVEPTR_T ptr){
@@ -51,5 +55,13 @@ class MovePointers{
 
 	static void debug(MOVEPTR_T mv);
 };
+
+#undef DESTINATION_MASK
+#undef OFFSET_FOR_DESTINATION_MASK
+#undef INDEX_MASK
+#undef OFFSET_FOR_INDEX
+#undef ACTION_TYPE_MASK
+#undef OFFSET_FOR_ACTION_TYPE
+#undef ACTIVATION_BIT
 
 #endif

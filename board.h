@@ -9,7 +9,25 @@
 #include "sizes.h"
 #include "move_pointers.h"
 
+struct MoveIterator{
+	int moveIndex;
+	moveType mt;
+	bool needToJumpForward;
+};
+
 class Board{
+
+	phaseType phase;
+
+	FIELD_T board[factualSideSize*factualSideSize];
+
+	MOVEPTR_T movePointers[factualSideSize*factualSideSize][DIR_NUMBER];
+	MOVE_T allMoves[MOVE_TYPES_NUMBER][maxOneTypeMoves];
+
+	unsigned short allMovesCount[MOVE_TYPES_NUMBER];
+	unsigned short allPawnsCount[PLAYER_TYPES_NUMBER][PAWN_TYPES_NUMBER];
+
+	MoveIterator moveIterator;
 
 public:
 
@@ -20,7 +38,17 @@ public:
 	void playRandom();
 	void debug();
 
+	void doSingleMove(MOVE_T);
 	playerType doRandomPlayout();
+
+	playerType getMovingPlayer();
+	phaseType getPhase();
+	int getMovesCount();
+
+	void resetMovesIterator();
+	MOVE_T getIteratorValue();
+	void increaseIterator();
+	bool iteratorAtEnd();
 
 private:
 
@@ -51,16 +79,6 @@ private:
 
 	bool isDataConsistent();
 	void checkEverything();
-
-	phaseType phase;
-
-	FIELD_T board[factualSideSize*factualSideSize];
-
-	MOVEPTR_T movePointers[factualSideSize*factualSideSize][DIR_NUMBER];
-	MOVE_T allMoves[MOVE_TYPES_NUMBER][maxOneTypeMoves];
-
-	unsigned short allMovesCount[MOVE_TYPES_NUMBER];
-	unsigned short allPawnsCount[PLAYER_TYPES_NUMBER][PAWN_TYPES_NUMBER];
 
 };
 

@@ -7,10 +7,12 @@
 class AI{
 
 	UCT uct;
+	Board b;
 
 public:
 
-	MOVE_T generateMove(Board& b, playerType pt);
+	MOVE_T generateMove(playerType);
+	void init(Board&);
 
 };
 

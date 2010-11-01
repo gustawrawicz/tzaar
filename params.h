@@ -5,10 +5,10 @@ struct Params{
 
 	static const float initWin;
 	static const float initPlayed;
+	static const int playoutsNo;
+	static const int playoutsToExpand;
+	static const float alpha;
 
 };
-
-const float Params::initWin = 1.0;
-const float Params::initPlayed = 2.0;
 
 #endif

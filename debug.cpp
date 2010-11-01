@@ -12,12 +12,12 @@ using namespace std;
 
 void Board::debug()
 {
-	for(int y=0; y<(int)factualSideSize; y++){
+	/*for(int y=0; y<(int)factualSideSize; y++){
 		for(int x=0; x<(int)factualSideSize; x++){
 			cout<<Fields::debug(board[y*factualSideSize+x])<<" ";
 		}
 		cout<<"\n";
-	}
+	}*/
 	cout<<"\nwhite captures: ";
 	for(int i=0; i<allMovesCount[whiteCapturingMove_t]; i++)
 		cout<<"("<<Moves::getSource(allMoves[whiteCapturingMove_t][i])/factualSideSize - guardLayers<<","
@@ -79,7 +79,7 @@ void Board::debug()
 #endif
 
 }
-
+/*
 string Fields::debug(FIELD_T field){
 	MY_ASSERT(((field&WHITE) ^ (field&BLACK)) || field == WALL || field == EMPTY);
 	MY_ASSERT(((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT)) || field == WALL || field == EMPTY);
@@ -101,6 +101,7 @@ string Fields::debug(FIELD_T field){
 	MY_ASSERT(false);
 	return "~~~~~";
 }
+*/
 
 void MovePointers::debug(MOVEPTR_T mv){
 	if(MovePointers::initialMovePtr == mv){

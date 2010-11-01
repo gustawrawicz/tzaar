@@ -2,20 +2,25 @@
 #define _UCT_H_
 
 #include "uct_node.h"
+#include "memory_manager.h"
+#include "board.h"
 
 class UCT{
 
 	UCTNode root;
+	MemoryManager mm;
 
 public:
 
 	void reset();
-	void buildTree();
+	void buildTree(Board&);
 	MOVE_T getBestMoveFromTree();
 
 private:
 
-	void notifyPlayout();
+	void notifyPlayout(Board&, playerType);
+	MOVE_T * getNextMove(MOVE_T *);
+	void expand(UCTNode *, Board&);
 
 };
 
