@@ -1,10 +1,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <cmath>
 
 #include "board.h"
 #include "move_pointers.h"
 #include "logic.h"
+#include "my_exception.h"
+#include "technical_tools.h"
 
 using namespace std;
 
@@ -19,6 +22,8 @@ void Board::resetMovesIterator(){
 	moveIterator.moveIndex = 0;
 	moveIterator.mt = MOVE_TYPE_FROM_PHASE(phase);
 	moveIterator.needToJumpForward = CHOICE_PHASE(phase);
+	MY_ASSERT(!(phase == whiteChoice_t) || (moveIterator.mt == whiteCapturingMove_t));
+	MY_ASSERT(!(phase == blackChoice_t) || (moveIterator.mt == blackCapturingMove_t));
 }
 
 MOVE_T Board::getIteratorValue(){
@@ -42,7 +47,8 @@ bool Board::iteratorAtEnd(){
 playerType Board::getMovingPlayer(){
 	if(phase == blackCapture_t || phase == blackChoice_t)
 		return black_t;
-	return white_t;
+	else
+		return white_t;
 }
 
 phaseType Board::getPhase(){
@@ -59,12 +65,35 @@ int Board::getMovesCount(){
 		if(ACTIVE_PLAYER(phase) == white_t)
 			return allMovesCount[whiteCapturingMove_t];
 		else
-			return allMovesCount[whiteReinforcingMove_t];
+			return allMovesCount[blackCapturingMove_t];
 	}
 }
 
-void Board::setBeginningGameState()
-{
+bool Board::blackWon(){
+	switch(phase){
+		case beginning_t:
+			return blackWon(allMovesCount[whiteCapturingMove_t]);
+		case whiteCapture_t:
+			return blackWon(allMovesCount[whiteCapturingMove_t]);
+		case whiteChoice_t:
+			return blackWon(allMovesCount[whiteCapturingMove_t]+allMovesCount[whiteReinforcingMove_t]);
+		default:
+			return false;
+	}
+}
+
+bool Board::whiteWon(){
+	switch(phase){
+		case blackCapture_t:
+			return whiteWon(allMovesCount[blackCapturingMove_t]);
+		case blackChoice_t:
+			return whiteWon(allMovesCount[blackCapturingMove_t]+allMovesCount[blackReinforcingMove_t]);
+		default:
+			return false;
+	}
+}
+
+void Board::setBeginningGameState(){
 
 	for(unsigned i=0; i<sideSize; i++)
 		for(unsigned j=0; j<sideSize; j++)
@@ -78,23 +107,17 @@ void Board::setBeginningGameState()
 			boardSet(sideSize+guardLayers+j,i,Fields::wall);
 		}
 
-	for(unsigned i = 0, j = sideSize-1; i < sideSize/2; j--){ /*blocking left-lower corner*/
-		if(j <= sideSize/2 + i){
-			i++;
-			j=sideSize;
-			continue;
+		for(unsigned i=0; i<sideSize/2; i++){				/*filling left-upper corner*/
+			for(unsigned j=sideSize/2-i+1; j>0; j--){
+				boardSet(i,j, Fields::wall);
+			}
 		}
-		boardSet(i,j,Fields::wall);
-	}
-
-	for(unsigned i = sideSize-1, j = 0; i > sideSize/2; j++){ /*right-upper*/
-		if(j >= i - sideSize/2){
-			i--;
-			j = -1;
-			continue;
+		
+		for(unsigned i=sideSize; i>sideSize/2; i--){			/*filling right-lower corner*/
+			for(unsigned j=sideSize; j>3*sideSize/2-i; j--){
+				boardSet(i,j, Fields::wall);
+			}
 		}
-		boardSet(i,j,Fields::wall);
-	}
 
 	boardSet(sideSize/2,sideSize/2,Fields::wall); /*middle of the board*/
 
@@ -169,6 +192,8 @@ void Board::load(Board& b){
 }
 
 void Board::doSingleMove(MOVE_T move){
+	MY_ASSERT(movePointers[Moves::getSource(move)][Moves::getDirection(move)] != MovePointers::initialMovePtr);
+	MY_ASSERT(move != Moves::initialMove);
 	makeMove(move);
 	updateMoves(move);
 	phase = NEXT_PHASE(phase);
@@ -384,6 +409,125 @@ void Board::tryToNotifyMove(unsigned src, unsigned dest, direction dir){
 
 }
 
+bool Board::validMove(unsigned x1, unsigned y1, unsigned x2, unsigned y2){
+
+	FIELD_T f1, f2;
+	f1 = boardAt(x1,y1);
+	f2 = boardAt(x2,y2);
+
+	switch(phase){
+		case beginning_t:
+			if(Fields::getPawnColor(f1) != white_t)
+				return false;
+			if(Fields::getPawnColor(f2) != black_t)
+				return false;
+			break;
+		case blackCapture_t:
+			if(Fields::getPawnColor(f1) != black_t)
+				return false;
+			if(Fields::getPawnColor(f2) != white_t)
+				return false;
+			break;
+		case blackChoice_t:
+			if(Fields::getPawnColor(f1) != white_t)
+				return false;
+			break;
+		case whiteCapture_t:
+			if(Fields::getPawnColor(f1) != white_t)
+				return false;
+			if(Fields::getPawnColor(f2) != black_t)
+				return false;
+			break;
+		case whiteChoice_t:
+			if(Fields::getPawnColor(f1) != white_t)
+				return false;
+			break;
+		}
+	if(Fields::getPawnHeight(f1)<Fields::getPawnHeight(f2))
+		return false;
+	if(x1==x2 && y1==y2)
+		return false;
+	if(x1==x2){
+		unsigned i = min(y1,y2)+1;
+		while(i<max(y1,y2)){
+			if(Fields::getPawnType(boardAt(x1,i)) != emptyField_t)
+				return false;
+			i++;
+		}
+		return true;
+	}
+	if(y1 == y2){
+		unsigned i = min(x1,x2)+1;
+		while(i<max(x1,x2)){
+			if(Fields::getPawnType(boardAt(i,y1)) != emptyField_t)
+				return false;
+			i++;
+		}
+		return true;
+	}
+	if(x1+y1 == x2+y2){
+		unsigned i = 1;
+		int x = min(x1, x2);
+		int y = max(y1, y2);
+		while(i < ((x1-x2>0)?(x1-x2):(x2-x1))){
+			if(Fields::getPawnType(boardAt(x+i,y-i)) != emptyField_t)
+				return false;
+			i++;
+		}
+		return true;
+	}
+	return false;
+
+}
+
+moveType Board::getMoveType(unsigned x1, unsigned y1, unsigned x2, unsigned y2){
+	moveType mt;
+	if(Fields::getPawnColor(boardAt(x1,y1)) == white_t){
+		if(Fields::canCapture(boardAt(x1,y1),boardAt(x2,y2))){
+			mt = whiteCapturingMove_t;
+		} else if(Fields::canReinforce(boardAt(x1,y1),boardAt(x2,y2))){
+			mt = whiteReinforcingMove_t;
+		}
+	} else if(Fields::getPawnColor(boardAt(x1,y1)) == black_t){
+		if(Fields::canCapture(boardAt(x1,y1),boardAt(x2,y2))){
+			mt = blackCapturingMove_t;
+		} else if(Fields::canReinforce(boardAt(x1,y1),boardAt(x2,y2))){
+			mt = blackReinforcingMove_t;
+		}
+	}
+	return mt;
+}
+
+direction Board::getDirection(unsigned x1, unsigned y1, unsigned x2, unsigned y2){
+
+	if(x1 == x2){
+		if(y1<y2)
+			return down_t;
+		else if(y1>y2)
+			return up_t;
+	} else if(y1 == y2){
+		if(x1<x2)
+			return right_t;
+		else if(x1>x2)
+			return left_t;
+	} else if(x1+y1 == x2+y2)
+		if(x2>x1)
+			return rightup_t;
+		else if(x2<x1)
+			return leftdown_t;
+
+	MY_ASSERT(false);
+
+	return down_t;	
+
+}
+
+MOVE_T Board::getMove(unsigned x1, unsigned y1, unsigned x2, unsigned y2){
+	moveType mt;
+	mt = getMoveType(x1,y1,x2,y2);
+	direction d = getDirection(x1,y1,x2,y2);
+	return Moves::getMove(coordsToIndex(x1,y1),coordsToIndex(x2,y2),mt,d);
+}
 
 FIELD_T Board::boardAt(int i, int j){
 	return board[factualSideSize*(i+guardLayers)+j+guardLayers];
@@ -391,6 +535,10 @@ FIELD_T Board::boardAt(int i, int j){
 
 void Board::boardSet(int i, int j, FIELD_T value){
 	board[factualSideSize*(i+guardLayers)+j+guardLayers] = value;
+}
+
+int Board::coordsToIndex(int i, int j){
+	return factualSideSize*(i+guardLayers)+j+guardLayers;
 }
 
 void Board::notifyMove(unsigned i1, unsigned j1, unsigned i2, unsigned j2, direction dir, moveType mt){
@@ -478,5 +626,149 @@ void Board::checkEverything(){
 		cout<<"zepsuty ruch! Z pola "<<bm.src<<" do pola "<<bm.dest<<endl;
 		debug();
 	}
+
+}
+
+int Board::getField(char a, int b){
+	return boardAt(a - 'a' + 1, b);
+}
+
+direction Board::getDir(char a1, int a2, char b1, int b2){
+	return getDir(a1-'a'+1,a2, b1-'a'+1,b2);
+}
+
+direction Board::getDir(int a1, int a2, int b1, int b2){
+
+	if(a1 == a2)
+		if(b1 > b2)
+			return down_t;
+		else
+			return up_t;
+	
+	if(b1 == b2)
+		if(a1 > a2)
+			return left_t;
+		else
+			return right_t;
+
+	if(a1+a2 == b1+b2)
+		if(a2 > a1)
+			return rightup_t;
+		else
+			return leftdown_t;
+
+	MY_ASSERT(false);
+	return up_t;
+
+}
+
+moveType Board::getMoveType(int a, int b){
+
+	if(Fields::getPawnColor(board[a]) == white_t)
+		if(Fields::getPawnColor(board[b]) == white_t)
+			return whiteReinforcingMove_t;
+		else
+			return whiteCapturingMove_t;
+	else
+		if(Fields::getPawnColor(board[b]) == white_t)
+			return blackCapturingMove_t;
+		else
+			return blackReinforcingMove_t;
+
+}
+
+string Board::getMoveString(MOVE_T m){
+
+	int src = Moves::getSource(m);
+	int dest = Moves::getDestination(m);
+
+	int x1,x2,y1,y2;
+
+	x1 = src%factualSideSize - guardLayers + 1;
+	y1 = src/factualSideSize - guardLayers + 1;
+	x2 = dest%factualSideSize - guardLayers + 1;
+	y2 = dest/factualSideSize - guardLayers + 1;
+
+	x1 += 'A' - 1;
+	x2 += 'A' - 1;
+
+	char x1Str[2] = {x1,'\0'};
+	char x2Str[2] = {x2,'\0'};
+
+	return string(x1Str) + unsignedToString(y1) + " " + string(x2Str) + unsignedToString(y2);
+
+}
+
+void Board::tryToSetPawnAt(string s){
+
+	int i=0;
+	int x=0, y;
+	int h=0;
+	playerType playert;
+	pawnType pawnt;
+
+	if(s.length() == 0) throw MyException("too short string");
+
+	x=s[0]-'A'+1;
+
+	if(x<=0) throw MyException("bad coordinate");
+
+	s = s.substr(1);
+
+	y = getNumeralPrefix(s);
+
+	if(y<=0) throw MyException("bad coordinate");
+
+	s = cutNumeralPrefix(s);
+
+	if(s.length() < 3)
+		throw MyException("too short string");
+
+	if(s[1]=='w')
+		playert = white_t;
+	else if(s[1]=='b')
+		playert = black_t;
+	else throw MyException("bad pawn color");
+
+	if(s[2] != 't') throw MyException("bad pawn type");
+
+	if(s[3]=='r')
+		pawnt = tzaar_t;
+	else if(s[3]=='s')
+		pawnt = tzarras_t;
+	else if(s[3]=='t')
+		pawnt = tott_t;
+	else throw MyException("bad pawn type");
+
+	s=s.substr(3);
+
+	h = getNumeralPrefix(s);
+
+	if(h<=0) throw MyException("bad pawn height");
+
+	boardSet(x-1,y-1,Fields::getOccupiedValue(pawnt,playert,h));
+	
+}
+
+void Board::tryToMakeMove(string s1, string s2){
+
+	int x1 = getNumeralPrefix(s1);
+	int x2 = getNumeralPrefix(s2);
+
+	s1 = cutNumeralPrefix(s1);
+	s2 = cutNumeralPrefix(s2);
+
+	if(s1.length() == 0 || s2.length() == 0)
+		throw MyException("too short string");
+
+	int y1 = s1[0]-'A'+1;
+	int y2 = s2[0]-'A'+1;
+
+	if(!validMove(x1,y1,x2,y2))
+		throw MyException("invalid move");
+
+	MOVE_T m = getMove(x1,y1,x2,y2);
+
+	makeMove(m);
 
 }

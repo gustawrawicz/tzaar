@@ -1,6 +1,6 @@
 #include "ai.h"
 
-MOVE_T AI::generateMove(playerType pt){
+MOVE_T AI::generateMove(){
 	uct.reset();
 	uct.buildTree(b);
 	return uct.getBestMoveFromTree();

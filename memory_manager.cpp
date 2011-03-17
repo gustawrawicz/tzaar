@@ -2,6 +2,7 @@
 
 void MemoryManager::reset(){
 
+	MY_ASSERT(true);
 	n=0;
 
 }
@@ -12,7 +13,7 @@ UCTNode * MemoryManager::getMemory(int size){
 		throw NotEnoughMemory();
 	} else {
 		n += size;
-		return &memory[n-size];
+		return &(memory[n-size]);
 	}
 
 }

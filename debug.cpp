@@ -79,29 +79,26 @@ void Board::debug()
 #endif
 
 }
-/*
+
 string Fields::debug(FIELD_T field){
-	MY_ASSERT(((field&WHITE) ^ (field&BLACK)) || field == WALL || field == EMPTY);
-	MY_ASSERT(((field&TZAAR) ^ (field&TZARRAS) ^ (field&TOTT)) || field == WALL || field == EMPTY);
-	MY_ASSERT(((field&(0xff)) > 0) || field == WALL || field == EMPTY);
 	switch(field){
-		case EMPTY: return string("     ");
-		case WALL: return string("#####");
+		case empty: return string("     ");
+		case wall: return string("#####");
 		default:
-			if(field & WHITE){
-				if(field & TZAAR) return (string("<<") + (char)((field & HEIGHT_MASK) + '0') + string(">>"));
-				if(field & TZARRAS) return (string(" <") + (char)((field & HEIGHT_MASK) + '0') + string("> "));
-				if(field & TOTT) return (string(" -") + (char)((field & HEIGHT_MASK) + '0') + string("- "));
+			if(getPawnColor(field) == white_t){
+				if(getPawnType(field) == tzaar_t) return (string("<<") + (char)((field & 0xff) + '0') + string(">>"));
+				if(getPawnType(field) == tzarras_t) return (string(" <") + (char)((field & 0xff) + '0') + string("> "));
+				if(getPawnType(field) == tott_t) return (string(" -") + (char)((field & 0xff) + '0') + string("- "));
 			} else {
-				if(field & TZAAR) return (string("[[") + (char)((field & HEIGHT_MASK) + '0') + string("]]"));
-				if(field & TZARRAS) return (string(" [") + (char)((field & HEIGHT_MASK) + '0') + string("] "));
-				if(field & TOTT) return (string(" ~") + (char)((field & HEIGHT_MASK) + '0') + string("~ "));
+				if(getPawnType(field) == tzaar_t) return (string("[[") + (char)((field & 0xff) + '0') + string("]]"));
+				if(getPawnType(field) == tzarras_t) return (string(" [") + (char)((field & 0xff) + '0') + string("] "));
+				if(getPawnType(field) == tott_t) return (string(" ~") + (char)((field & 0xff) + '0') + string("~ "));
 			}
 	}
 	MY_ASSERT(false);
 	return "~~~~~";
 }
-*/
+
 
 void MovePointers::debug(MOVEPTR_T mv){
 	if(MovePointers::initialMovePtr == mv){

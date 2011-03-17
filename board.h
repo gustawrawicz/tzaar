@@ -1,6 +1,8 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
+#include <string>
+
 #include "my_assert.h"
 #include "logic.h"
 #include "fields.h"
@@ -50,10 +52,23 @@ public:
 	void increaseIterator();
 	bool iteratorAtEnd();
 
+	bool blackWon();
+	bool whiteWon();
+
+	int getField(char, int);
+	direction getDir(int, int, int, int);
+	direction getDir(char, int, char, int);
+	moveType getMoveType(int, int);
+
+	void tryToSetPawnAt(std::string);
+	void tryToMakeMove(std::string,std::string);
+	static string getMoveString(MOVE_T);
+
 private:
 
-	FIELD_T boardAt(int i, int j);
-	void boardSet(int i, int j, FIELD_T value);
+	FIELD_T boardAt(int, int);
+	void boardSet(int, int, FIELD_T);
+	int coordsToIndex(int, int);
 
 	void doRandomWhiteMove();
 	void doRandomWhiteCapture();
@@ -70,6 +85,10 @@ private:
 
 	void makeMove(MOVE_T move);
 	void tryToNotifyMove(unsigned src, unsigned dest, direction dir);
+	bool validMove(unsigned, unsigned, unsigned, unsigned);
+	MOVE_T getMove(unsigned, unsigned, unsigned, unsigned);
+	direction getDirection(unsigned, unsigned, unsigned, unsigned);
+	moveType getMoveType(unsigned, unsigned, unsigned, unsigned);
 
 	void notifyMove(unsigned i1, unsigned j1, unsigned i2, unsigned j2, direction dir, moveType mt);
 	void notifyMove(unsigned src, unsigned dest, direction dir, moveType mt);

@@ -9,8 +9,8 @@
 
 using namespace std;
 
-#define PLAYER_TYPE_MASK 0x800
-#define OFFSET_FOR_PLAYER_TYPE 11
+#define PLAYER_TYPE_MASK 0x400
+#define OFFSET_FOR_PLAYER_TYPE 10
 #define FIELD_TYPE_MASK 0xc00
 #define OFFSET_FOR_FIELD_TYPE 10
 #define PAWN_TYPE_MASK 0x300
@@ -34,21 +34,23 @@ public:
 	}
 
 	static bool isProperPawn(FIELD_T field){
+		MY_ASSERT((field&PAWN_TYPE_MASK)>>OFFSET_FOR_PAWN_TYPE != 3); 	//because pawnType is from {0,1,2}
 		return	!((field>>OFFSET_FOR_FIELD_TYPE)&NOT_PAWN_BIT) &&
-				((field&PAWN_TYPE_MASK)>>OFFSET_FOR_PAWN_TYPE != 3) &&	//because pawnType is from {0,1,2}
 				((field&HEIGHT_MASK)>>OFFSET_FOR_HEIGHT > 0);
 	}
 
 	static bool canCapture(FIELD_T attacker, FIELD_T defender){
 		MY_ASSERT(isProperPawn(attacker));
-		if(!isProperPawn(defender)) return false;
+		if(!isProperPawn(defender) || ((attacker&PLAYER_TYPE_MASK) == (defender&PLAYER_TYPE_MASK)))
+			return false;
 		return ((attacker&HEIGHT_MASK) >= (defender&HEIGHT_MASK));
 	}
 
 	static bool canReinforce(FIELD_T attacker, FIELD_T defender){
 		MY_ASSERT(isProperPawn(attacker));
-		if(!isProperPawn(defender)) return false;
-		return ((attacker&PAWN_TYPE_MASK) == (defender&PAWN_TYPE_MASK));
+		if(!isProperPawn(defender))
+			return false;
+		return ((attacker&PLAYER_TYPE_MASK) == (defender&PLAYER_TYPE_MASK));
 	}
 
 	static string debug(FIELD_T field);
@@ -61,6 +63,11 @@ public:
 	static pawnType getPawnType(FIELD_T field){
 		MY_ASSERT((field&PAWN_TYPE_MASK)>>OFFSET_FOR_PAWN_TYPE != 3);
 		return (pawnType)((field&PAWN_TYPE_MASK)>>OFFSET_FOR_PAWN_TYPE);
+	}
+
+	static unsigned int getPawnHeight(FIELD_T field){
+		MY_ASSERT((field&HEIGHT_MASK)>>OFFSET_FOR_HEIGHT > 0);
+		return ((field&HEIGHT_MASK)>>OFFSET_FOR_HEIGHT);
 	}
 
 	static FIELD_T increase(FIELD_T increased, FIELD_T increaser){

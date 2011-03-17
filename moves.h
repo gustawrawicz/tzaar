@@ -1,20 +1,22 @@
 #ifndef _MOVES_H_ 
 #define _MOVES_H_
 
+#include <string>
+
 #include "logic.h"
 #include "directions.h"
 #include "my_assert.h"
 
 #define SOURCE_MASK 0x0fff
 #define OFFSET_FOR_SOURCE 0
+#define DIRECTION_MASK 0xf000
+#define OFFSET_FOR_DIRECTION 12
 #define DESTINATION_MASK 0xfff0000
 #define OFFSET_FOR_DESTINATION 16
 #define MOVE_TYPE_MASK 0x30000000
 #define OFFSET_FOR_MOVE_TYPE 28
 #define PLAYER_TYPE_MASK 0x20000000
 #define OFFSET_FOR_PLAYER_TYPE 29
-#define DIRECTION_MASK 0xf000
-#define OFFSET_FOR_DIRECTION 12
 
 #define MOVE_T unsigned
 

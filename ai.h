@@ -11,7 +11,7 @@ class AI{
 
 public:
 
-	MOVE_T generateMove(playerType);
+	MOVE_T generateMove();
 	void init(Board&);
 
 };

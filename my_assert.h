@@ -3,6 +3,6 @@
 
 #include <cassert>
 
-#define MY_ASSERT(x) assert(x)
+#define MY_ASSERT(x) /*assert(x)*/ if(!(x)){int * g; g=NULL; g[1]=9;}
 
 #endif

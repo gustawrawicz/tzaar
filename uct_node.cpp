@@ -59,6 +59,7 @@ void UCTNode::update(playerType winner){
 		won += 1.0;
 	}
 	played += 1.0;
+	ratio = won/played;
 
 }
 

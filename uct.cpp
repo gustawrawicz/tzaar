@@ -23,18 +23,21 @@ void UCT::notifyPlayout(Board& b, playerType movingPlayer){
 	tmpBoard.load(b);
 
 	UCTNode * active = &root;
+
 	while(active->getFirstSon() != NULL){
 		active = active->getNext(movingPlayer);
-		b.doSingleMove(active->getMyMove());
+		tmpBoard.doSingleMove(active->getMyMove());
 	}
 
-	if(active->getPlayed() >= Params::playoutsToExpand){
+	if(active->getPlayed() >= Params::playoutsToExpand)
 		expand(active, tmpBoard);
+
+	if(active->getSonsCount() > 0){
 		active = active->getFirstSon();
-		b.doSingleMove(active->getMyMove());
+		tmpBoard.doSingleMove(active->getMyMove());
 	}
 
-	playerType winner = b.doRandomPlayout();
+	playerType winner = tmpBoard.doRandomPlayout();
 
 	active = &root;
 	do{
@@ -45,18 +48,18 @@ void UCT::notifyPlayout(Board& b, playerType movingPlayer){
 }
 
 MOVE_T UCT::getBestMoveFromTree(){
+
 	UCTNode * bestMove = root.getFirstSon();
 	for(int i=1; i<root.getSonsCount(); i++){
 		if(bestMove->getRatio() < root.getFirstSon()[i].getRatio())
 			bestMove = &(root.getFirstSon()[i]);
 	}
 	return bestMove->getMyMove();
+
 }
 
 void UCT::expand(UCTNode * node, Board& b){
 
-	int k;
-	k=0;
 	MY_ASSERT((node->getSonsCount())==0);
 	MY_ASSERT((node->getFirstSon())==NULL);
 
